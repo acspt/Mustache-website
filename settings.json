@@ -1,6 +1,6 @@
 {
   "mustache.compiler": {
-    "siteUrl": "D:/Projetos/github-copilot/output/",
+    "siteUrl": "http://localhost/mustache-website/output/",
     "output": "output",
     "templates": "templates/pages",
     "layouts": "templates/layouts",
