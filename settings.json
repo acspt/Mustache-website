@@ -1,12 +1,12 @@
 {
   "mustache.compiler": {
-    "siteUrl": "http://localhost/mustache-website/output/",
+    "siteUrl": "http://mustache-website.infinityfree.me/",
     "output": "output",
     "templates": "templates/pages",
     "layouts": "templates/layouts",
     "assets": "assets",
     "partials": "templates/partials",
-    "cleanOutput": true ,
+    "cleanOutput": true,
     "createDirectories": true,
     "validateOutput": true,
     "copyAssets": true
