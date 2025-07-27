@@ -1,5 +1,7 @@
 # Mustache Website - Static Site Generator
 
+Use https://mustache.github.io/ 
+
 A modern, responsive website built with Mustache.js templates and a custom static site generator. This project showcases a clean component-based architecture using reusable templates, JSON data files, and modern web technologies.
 ## Demo
 
