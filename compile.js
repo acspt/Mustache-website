@@ -1,34 +1,37 @@
 const fs = require('fs');
 const path = require('path');
 const Mustache = require('mustache');
+const { exit } = require('process');
 
 const VERSION = '1.0.0'; // Update as needed
 const AUTHOR = 'Arlindo Santos'; // Update as needed
 
 // Load settings
 let settings = {};
+let siteUrl = "";
 try {
     const settingsContent = fs.readFileSync(path.join(__dirname, 'settings.json'), 'utf8');
     const settingsData = JSON.parse(settingsContent);
+    siteUrl = settingsData.siteUrl;
+
     settings = settingsData['mustache.compiler'];
+    console.log(settings);
     console.log('✓ Settings loaded successfully');
 } catch (error) {
-    console.warn('⚠️  Settings file not found, using defaults');
+    console.warn('⚠️  Settings file not found, using defaults' + error.message);
     settings = {
-        output: 'output',
+        output: '.',
         templates: 'templates/pages',
-        layout: 'templates/layout.mustache',
+        layout: 'templates/layouts',
         partials: 'templates/partials',
-        siteUrl: '',
-        cleanOutput: false,
+        data: 'templates/data',
         createDirectories: true,
-        validateOutput: true,
-        copyAssets: false
+        validateOutput: true
     };
 }
 
 // Function to convert relative URLs to absolute URLs
-function convertRelativeToAbsolute(obj, siteUrl) {
+function convertRelativeToAbsolute(obj) {
     if (!siteUrl) return obj;
 
     // Remove trailing slash from siteUrl
@@ -45,7 +48,7 @@ function convertRelativeToAbsolute(obj, siteUrl) {
         } else if (Array.isArray(value)) {
             return value.map(processValue);
         } else if (value && typeof value === 'object') {
-            return convertRelativeToAbsolute(value, siteUrl);
+            return convertRelativeToAbsolute(value);
         }
         return value;
     }
@@ -58,7 +61,7 @@ function convertRelativeToAbsolute(obj, siteUrl) {
 }
 
 // Function to convert relative URLs in HTML content to absolute URLs
-function convertRelativeUrlsInHtml(htmlContent, siteUrl) {
+function convertRelativeUrlsInHtml(htmlContent) {
     if (!siteUrl || !htmlContent) return htmlContent;
 
     // Remove trailing slash from siteUrl
@@ -98,11 +101,21 @@ function convertRelativeUrlsInHtml(htmlContent, siteUrl) {
 }
 
 // Configuration using settings
-const templatesDir = path.join(__dirname, settings.templates);
-const partialsDir = path.join(__dirname, settings.partials);
-const layoutsDir = path.join(__dirname, settings.layouts || 'templates');
-const outputBasePath = path.join(__dirname, settings.output);
-const assetsDir = path.join(__dirname, settings.assets);
+    const templatesDir = path.join(__dirname, settings.templates);
+    const partialsDir = path.join(__dirname, settings.partials);
+    const layoutsDir = path.join(__dirname, settings.layouts);
+    const dataDir = path.join(__dirname, settings.data);
+    const outputBasePath = __dirname;
+
+
+
+
+// Debugging logs to identify undefined paths in settings
+console.log('Debug: settings object:', settings);
+console.log('Debug: templatesDir:', templatesDir);
+console.log('Debug: partialsDir:', partialsDir);
+console.log('Debug: layoutsDir:', layoutsDir);
+console.log('Debug: outputBasePath:', outputBasePath);
 
 // Global variables
 let partials = {};
@@ -314,7 +327,7 @@ const renderer = new EnhancedMustacheRenderer();
 // Load shared global data
 function loadGlobalData() {
     try {
-        const globalDataPath = path.join(__dirname, 'data/global.json');
+        const globalDataPath = path.join(dataDir, '/global.json');
         const globalDataContent = fs.readFileSync(globalDataPath, 'utf8');
         data = JSON.parse(globalDataContent);
         console.log('✓ Global data loaded successfully');
@@ -328,7 +341,7 @@ function loadGlobalData() {
 function loadPageData(templateInfo) {
     try {
         let dataPath = templateInfo.template.replace('.mustache', '.json');
-        dataPath = path.join(__dirname, 'data/pages', dataPath);
+        dataPath = path.join(dataDir, dataPath);
 
         if (fs.existsSync(dataPath)) {
             const pageDataContent = fs.readFileSync(dataPath, 'utf8');
@@ -337,8 +350,8 @@ function loadPageData(templateInfo) {
             let mergedData = { ...data, ...pageData };
 
             // Convert relative URLs to absolute URLs
-            if (settings.siteUrl) {
-                mergedData = convertRelativeToAbsolute(mergedData, settings.siteUrl);
+            if (siteUrl) {
+                mergedData = convertRelativeToAbsolute(mergedData);
                 console.log('✓ Converted relative URLs to absolute URLs');
             }
 
@@ -378,8 +391,8 @@ function loadPageData(templateInfo) {
             console.warn(`⚠️  No specific data file found for ${templateInfo.template}, using global data only`);
             let globalData = { ...data };
 
-            if (settings.siteUrl) {
-                globalData = convertRelativeToAbsolute(globalData, settings.siteUrl);
+            if (siteUrl) {
+                globalData = convertRelativeToAbsolute(globalData);
             }
 
             return globalData;
@@ -452,12 +465,12 @@ function scanTemplates() {
 
         function scanDirectory(dir, relativePath = '') {
             const items = fs.readdirSync(dir);
-            console.log(dir); 
+            console.log(dir);
             items.forEach(item => {
                 const fullPath = path.join(dir, item);
                 const relativeItemPath = path.join(relativePath, item);
                 const stat = fs.statSync(fullPath);
-              
+
                 if (stat.isDirectory()) {
                     scanDirectory(fullPath, relativeItemPath);
                 } else if (item.endsWith('.mustache')) {
@@ -814,13 +827,7 @@ function copyDirectory(src, dest) {
     }
 }
 
-// Clean output directory
-function cleanOutputDirectory() {
-    if (fs.existsSync(outputBasePath)) {
-        fs.rmSync(outputBasePath, { recursive: true, force: true });
-        console.log(`✓ Cleaned output directory: ${settings.output}`);
-    }
-}
+
 
 // Get page-specific data based on template info with enhanced data processing
 function getPageData(templateInfo) {
@@ -894,6 +901,7 @@ function renderPageContent(templateInfo, data) {
 
 // Main compilation process
 async function compile() {
+
     // Check for specific file argument
     const args = process.argv.slice(2);
     if (args.length > 0 && (args[0] === '-v' || args[0] === '--version')) {
@@ -908,18 +916,11 @@ async function compile() {
 
     if (specificFile) {
         console.log(`🎯 Compiling specific file: ${specificFile}`);
-        console.log(`📁 Output directory: ${settings.output}`);
     } else {
         console.log('🚀 Starting Mustache compilation...\n');
-        console.log(`📁 Output directory: ${settings.output}`);
     }
 
-    // Clean output directory if enabled (only for full compilation, never for specific files)
-    if (settings.cleanOutput && !specificFile) {
-        cleanOutputDirectory();
-    } else if (specificFile) {
-        console.log('⚠️  Skipping output cleanup for specific file compilation');
-    }
+
 
     // Clear template and layout cache
     templateCache = {};
@@ -930,12 +931,6 @@ async function compile() {
     loadPartials();
     loadLayout();
 
-    // Copy assets if enabled (skip for specific file compilation)
-    if (!specificFile) {
-        copyAssets();
-    } else {
-        console.log('⚠️  Skipping asset copy for specific file compilation');
-    }
 
     try {
         // Scan templates directory for all .mustache files
@@ -1000,7 +995,7 @@ async function compile() {
         for (const templateInfo of templates) {
             try {
                 console.log(`🔧 Processing: ${templateInfo.template} (${templateInfo.name})`);
-                
+
                 // Load page-specific data
                 const pageData = loadPageData(templateInfo);
 
@@ -1027,8 +1022,8 @@ async function compile() {
                 }
 
                 // Convert relative URLs to absolute URLs in the HTML output
-                if (settings.siteUrl) {
-                    output = convertRelativeUrlsInHtml(output, settings.siteUrl);
+                if (siteUrl) {
+                    output = convertRelativeUrlsInHtml(output);
                     console.log(`✓ Converted relative URLs to absolute URLs for ${templateInfo.name}`);
                 }
 
@@ -1077,7 +1072,6 @@ async function compile() {
         } else {
             console.log('\n✅ Compilation completed successfully!');
             console.log(`📊 Performance: ${Object.keys(templateCache).length} templates cached, ${Object.keys(layoutCache).length} layouts cached`);
-            console.log(`📂 Output location: ${path.relative(__dirname, outputBasePath)}`);
         }
 
     } catch (error) {
@@ -1106,8 +1100,6 @@ module.exports = {
     validateOutput,
     convertRelativeToAbsolute,
     convertRelativeUrlsInHtml,
-    cleanOutput,
-    copyAssets,
     settings,
     TemplateInheritance,
     EnhancedMustacheRenderer

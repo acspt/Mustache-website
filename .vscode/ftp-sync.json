@@ -1,0 +1,27 @@
+{
+    "remotePath": "/htdocs",
+    "host": "ftpupload.net",
+    "username": "if0_39560557",
+    "password": "uupIZuOM7qXjo7",
+    "port": 21,
+    "secure": false,
+    "protocol": "ftp",
+    "uploadOnSave": false,
+    "passive": false,
+    "debug": true,
+    "privateKeyPath": null,
+    "passphrase": null,
+    "agent": null,
+    "allow": [],
+ 
+    "ignore": [
+        "\\.vscode",
+        "\\.git",
+        "\\.node_modules",
+        "\\.templates", 
+        "\\.cache", 
+        "\\.compile.js",
+        "\\.DS_Store"
+    ]
+   
+}

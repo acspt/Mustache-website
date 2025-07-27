@@ -1,14 +1,10 @@
 {
+  "siteUrl": "http://localhost/mustache-website/",
   "mustache.compiler": {
-    "siteUrl": "http://mustache-website.infinityfree.me/",
-    "output": "output",
     "templates": "templates/pages",
     "layouts": "templates/layouts",
-    "assets": "assets",
     "partials": "templates/partials",
-    "cleanOutput": true,
-    "createDirectories": true,
-    "validateOutput": true,
-    "copyAssets": true
-  }
+    "data": "templates/data",
+    "createDirectories": true
+   }
 }

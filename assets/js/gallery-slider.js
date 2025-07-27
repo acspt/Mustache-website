@@ -1,7 +1,8 @@
 let slideIndex = 0;
 document.addEventListener('DOMContentLoaded', () => {
   const slides = document.querySelectorAll('.slide');
-  const slider = document.querySelector('.slider');
+  console.log('Slides:', slides);
+  const slider = document.querySelector('#slider');
   const totalSlides = slides.length;
   function showSlides(index) {
     if (index >= totalSlides) {
