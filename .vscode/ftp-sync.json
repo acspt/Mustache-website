@@ -1,8 +1,8 @@
 {
     "remotePath": "/htdocs",
-    "host": "ftpupload.net",
-    "username": "if0_39560557",
-    "password": "uupIZuOM7qXjo7",
+    "host": "xxxx",
+    "username": "xxxx",
+    "password": "xxxxx",
     "port": 21,
     "secure": false,
     "protocol": "ftp",
